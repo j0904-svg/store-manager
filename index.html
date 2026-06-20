@@ -716,10 +716,19 @@
       input.className = "count-input tbl";
       input.value = item[kind];
       input.addEventListener("input", function(e){
-        item[kind] = clampInt(e.target.value);
-        saveInvState();
-        renderInventory();
-      });
+  item[kind] = clampInt(e.target.value);
+  saveInvState();
+
+  var row = e.target.closest(".row-content");
+  if(row){
+    var saleCell = row.querySelector(".sale-value");
+    if(saleCell) saleCell.textContent = fmt(item.open - item.close);
+  }
+});
+
+input.addEventListener("blur", function(){
+  renderInventory();
+});
       cell.appendChild(input);
     } else if(isStepper){
       var wrap = document.createElement("div");
@@ -922,4 +931,4 @@
 </script>
 </body>
 </html>
-```
+
