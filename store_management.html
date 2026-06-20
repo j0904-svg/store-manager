@@ -1,0 +1,925 @@
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>매장 관리</title>
+<style>
+  :root{
+    --bg:#EEF1F6;
+    --card-bg:#FFFFFF;
+    --card-border:#E3E7EE;
+    --text-primary:#1B2230;
+    --text-secondary:#75808F;
+    --text-faint:#AAB1BC;
+    --accent:#2F6FED;
+    --accent-dark:#1A4FC4;
+    --accent-soft:#E8F0FF;
+    --danger:#E1483F;
+    --danger-soft:#FCEAE9;
+    --radius-lg:20px;
+    --radius-md:14px;
+    --radius-sm:10px;
+    --shadow-card:0 1px 2px rgba(20,30,50,.04), 0 10px 26px rgba(20,30,50,.06);
+  }
+  *{box-sizing:border-box;}
+  html,body{height:100%;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text-primary);
+    font-family:-apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", "Segoe UI", sans-serif;
+    -webkit-tap-highlight-color:transparent;
+    user-select:none;
+    padding:24px 28px 44px;
+  }
+  .app{max-width:1180px;margin:0 auto;}
+
+  .tabbar{
+    display:inline-flex;
+    background:#E3E7EE;
+    padding:5px;
+    border-radius:14px;
+    gap:4px;
+    margin-bottom:22px;
+  }
+  .tab-btn{
+    touch-action:manipulation;
+    border:none;
+    background:transparent;
+    padding:11px 30px;
+    border-radius:10px;
+    font-size:15px;
+    font-weight:800;
+    color:var(--text-secondary);
+    cursor:pointer;
+  }
+  .tab-btn.active{
+    background:#fff;
+    color:var(--accent-dark);
+    box-shadow:0 2px 8px rgba(20,30,50,.10);
+  }
+
+  .panel.hidden{display:none;}
+
+  .topbar{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    flex-wrap:wrap;
+    gap:16px;
+    margin-bottom:22px;
+  }
+  .brand h1{margin:0;font-size:24px;font-weight:800;letter-spacing:-.02em;}
+  .mode-hint{margin:6px 0 0;font-size:14px;font-weight:600;color:var(--text-secondary);}
+  .mode-buttons{display:flex;gap:10px;flex-wrap:wrap;}
+  .mode-btn, .reset-btn{
+    touch-action:manipulation;
+    min-height:50px;
+    padding:0 22px;
+    border-radius:999px;
+    border:1.5px solid var(--card-border);
+    background:#fff;
+    color:var(--text-secondary);
+    font-size:15px;
+    font-weight:700;
+    cursor:pointer;
+    transition:background .15s, color .15s, border-color .15s, box-shadow .15s;
+  }
+  .mode-btn.active{
+    background:var(--accent);
+    border-color:var(--accent);
+    color:#fff;
+    box-shadow:0 6px 16px rgba(47,111,237,.30);
+  }
+  .reset-btn{background:var(--danger-soft);border-color:var(--danger-soft);color:var(--danger);}
+  .reset-btn:active, .mode-btn:active{transform:scale(.97);}
+
+  .columns{display:grid;grid-template-columns:repeat(3, 1fr);gap:18px;}
+  @media (max-width:760px){ .columns{grid-template-columns:1fr;} }
+  .card{
+    background:var(--card-bg);
+    border:1px solid var(--card-border);
+    border-radius:var(--radius-lg);
+    padding:22px 20px;
+    box-shadow:var(--shadow-card);
+  }
+  .card h2{margin:0 0 14px;font-size:19px;font-weight:800;letter-spacing:-.01em;}
+  .row{
+    display:flex;align-items:center;justify-content:space-between;
+    padding:11px 0;border-bottom:1px dashed var(--card-border);
+  }
+  .row:last-child{border-bottom:none;}
+  .denom-label{font-size:15px;font-weight:700;color:var(--text-primary);font-variant-numeric:tabular-nums;min-width:78px;}
+  .denom-x{color:var(--text-faint);font-weight:700;margin:0 4px;}
+  .value-area{display:flex;align-items:center;gap:8px;flex:1;justify-content:flex-end;}
+
+  .count-input{
+    width:92px;text-align:right;font-size:17px;font-weight:700;
+    padding:9px 10px;border-radius:var(--radius-sm);border:1.5px solid var(--card-border);
+    font-variant-numeric:tabular-nums;outline:none;color:var(--text-primary);background:#fff;
+  }
+  .count-input:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft);}
+  .count-input.tbl{width:100%;text-align:center;}
+
+  .count-display{
+    font-size:17px;font-weight:700;color:var(--text-primary);
+    min-width:64px;text-align:right;font-variant-numeric:tabular-nums;
+  }
+  .count-display.center{text-align:center;min-width:auto;}
+
+  .stepper-row{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;}
+  .stepper-btn{
+    touch-action:manipulation;width:34px;height:34px;border-radius:50%;border:none;
+    background:var(--accent-soft);color:var(--accent-dark);font-size:19px;font-weight:800;line-height:1;
+    display:flex;align-items:center;justify-content:center;cursor:pointer;flex:none;
+  }
+  .stepper-btn:active{transform:scale(.92);}
+  .stepper-btn:disabled{opacity:.32;cursor:not-allowed;}
+
+  .total-row{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:14px;padding-top:14px;border-top:2px solid var(--card-border);
+  }
+  .total-row span:first-child{font-size:14px;color:var(--text-secondary);font-weight:700;}
+  .total-value{font-size:22px;font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums;}
+
+  .summary{
+    margin-top:22px;background:var(--accent-soft);border:1.5px solid var(--accent);
+    border-radius:var(--radius-lg);padding:24px 18px;display:flex;align-items:center;justify-content:center;
+    gap:18px;flex-wrap:wrap;transition:background .2s, border-color .2s;
+  }
+  .summary.inactive{background:#EEF0F3;border-color:var(--card-border);}
+  .summary-item{display:flex;flex-direction:column;align-items:center;gap:6px;}
+  .summary-label{font-size:13px;font-weight:700;color:var(--text-secondary);}
+  .summary-value{font-size:30px;font-weight:800;color:var(--text-primary);font-variant-numeric:tabular-nums;}
+  .summary-value.result{color:var(--accent-dark);font-size:34px;}
+  .summary.inactive .summary-value.result{color:var(--text-faint);}
+  .summary-op{font-size:24px;font-weight:800;color:var(--text-secondary);}
+
+  .table-card{
+    background:var(--card-bg);border:1px solid var(--card-border);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);overflow:hidden;
+  }
+  .table-head{
+    display:grid;grid-template-columns:44px 1.7fr 1fr 1fr 1fr 1fr;gap:8px;
+    padding:14px 18px;background:#F7F8FB;border-bottom:1px solid var(--card-border);
+  }
+  .table-head span{font-size:13px;font-weight:800;color:var(--text-secondary);text-align:center;}
+  .table-head .col-drag{text-align:center;}
+  .table-head .col-name{text-align:left;}
+
+  .table-body{display:flex;flex-direction:column;}
+  .table-empty{padding:34px 18px;text-align:center;color:var(--text-faint);font-size:14px;font-weight:600;}
+
+  .row-wrap{position:relative;overflow:hidden;border-bottom:1px solid var(--card-border);}
+  .row-wrap.reorder-dragging{z-index:2;}
+  .row-wrap.reorder-dragging .row-content{opacity:.72;box-shadow:0 8px 22px rgba(20,30,50,.14);}
+  .row-wrap.reorder-over-before::before,
+  .row-wrap.reorder-over-after::after{content:"";position:absolute;left:0;right:0;height:3px;background:var(--accent);z-index:4;}
+  .row-wrap.reorder-over-before::before{top:0;}
+  .row-wrap.reorder-over-after::after{bottom:0;}
+  .row-wrap:last-child{border-bottom:none;}
+  .row-delete-bg{
+    position:absolute;top:0;right:0;bottom:0;width:84px;
+    background:var(--danger);display:flex;align-items:center;justify-content:center;
+  }
+  .row-delete-btn{
+    touch-action:manipulation;width:100%;height:100%;border:none;background:transparent;
+    color:#fff;font-size:14px;font-weight:800;cursor:pointer;
+  }
+  .row-content{
+    position:relative;display:grid;grid-template-columns:44px 1.7fr 1fr 1fr 1fr 1fr;gap:8px;align-items:center;
+    padding:12px 18px;background:#fff;transform:translateX(0);transition:transform .2s ease;touch-action:pan-y;
+  }
+  .row-content.dragging{transition:none;}
+
+  .cell{display:flex;align-items:center;justify-content:center;}
+  .drag-cell{justify-content:center;}
+  .drag-handle{
+    touch-action:none;width:34px;height:34px;border:none;border-radius:10px;background:#F1F3F6;
+    color:var(--text-secondary);font-size:18px;font-weight:900;line-height:1;cursor:grab;
+  }
+  .drag-handle:active{cursor:grabbing;background:var(--accent-soft);color:var(--accent-dark);}
+  .cell.cell-name{justify-content:flex-start;}
+  .name-input{
+    width:100%;border:1.5px solid transparent;background:transparent;font-size:15px;font-weight:700;
+    padding:9px 9px;border-radius:var(--radius-sm);color:var(--text-primary);outline:none;
+  }
+  .name-input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px var(--accent-soft);}
+  .name-input::placeholder{color:var(--text-faint);font-weight:600;}
+
+  .sale-value{font-weight:800;color:var(--accent-dark);font-variant-numeric:tabular-nums;}
+
+  .add-row-btn{
+    touch-action:manipulation;display:block;width:100%;padding:16px;border:none;
+    background:#F7F8FB;color:var(--accent-dark);font-size:15px;font-weight:800;cursor:pointer;
+    border-top:1px solid var(--card-border);
+  }
+  .add-row-btn:active{background:var(--accent-soft);}
+
+  .modal-overlay{
+    position:fixed;inset:0;background:rgba(20,26,38,.45);
+    display:flex;align-items:center;justify-content:center;z-index:999;padding:20px;
+  }
+  .modal-overlay.hidden{display:none;}
+  .modal-card{
+    width:300px;background:#fff;border-radius:22px;padding:26px 24px;text-align:center;
+    box-shadow:0 24px 60px rgba(0,0,0,.20);
+  }
+  .modal-card h3{margin:0 0 6px;font-size:19px;font-weight:800;}
+  .modal-card p{margin:0 0 18px;font-size:13px;color:var(--text-secondary);}
+  .modal-btn{
+    touch-action:manipulation;display:block;width:100%;padding:14px;margin-bottom:10px;
+    border-radius:14px;border:none;background:#F1F3F6;color:var(--text-primary);
+    font-size:15px;font-weight:700;cursor:pointer;
+  }
+  .modal-btn.danger{background:var(--danger-soft);color:var(--danger);}
+  .modal-cancel{
+    touch-action:manipulation;background:none;border:none;color:var(--text-secondary);
+    font-size:14px;font-weight:700;cursor:pointer;padding:6px;margin-top:2px;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <nav class="tabbar">
+    <button class="tab-btn active" data-tab="cash">현금</button>
+    <button class="tab-btn" data-tab="inventory">재고</button>
+  </nav>
+
+  <section class="panel" id="panel-cash">
+    <header class="topbar">
+      <div class="brand">
+        <h1>현금 시재 관리</h1>
+        <p class="mode-hint" id="cashModeHint">모드를 선택해 입력을 시작하세요</p>
+      </div>
+      <div class="mode-buttons">
+        <button class="mode-btn" data-mode="open">오픈</button>
+        <button class="mode-btn" data-mode="edit">수정</button>
+        <button class="mode-btn" data-mode="close">마감</button>
+        <button class="reset-btn" id="btnCashReset">초기화</button>
+      </div>
+    </header>
+
+    <main class="columns">
+      <section class="card">
+        <h2>빼놓은 돈</h2>
+        <div class="rows" id="rows-reserve"></div>
+        <div class="total-row"><span>합계</span><span class="total-value" id="total-reserve">0</span></div>
+      </section>
+      <section class="card">
+        <h2>오픈</h2>
+        <div class="rows" id="rows-open"></div>
+        <div class="total-row"><span>합계</span><span class="total-value" id="total-open">0</span></div>
+      </section>
+      <section class="card">
+        <h2>마감</h2>
+        <div class="rows" id="rows-close"></div>
+        <div class="total-row"><span>합계</span><span class="total-value" id="total-close">0</span></div>
+      </section>
+    </main>
+
+    <section class="summary inactive" id="summaryBox">
+      <div class="summary-item"><span class="summary-label">오픈 합계</span><span class="summary-value" id="sumOpen">0</span></div>
+      <span class="summary-op">-</span>
+      <div class="summary-item"><span class="summary-label">마감 합계</span><span class="summary-value" id="sumClose">0</span></div>
+      <span class="summary-op">=</span>
+      <div class="summary-item"><span class="summary-label">판매액</span><span class="summary-value result" id="sumResult">0</span></div>
+    </section>
+  </section>
+
+  <section class="panel hidden" id="panel-inventory">
+    <header class="topbar">
+      <div class="brand">
+        <h1>재고 관리</h1>
+        <p class="mode-hint" id="invModeHint">모드를 선택해 입력을 시작하세요</p>
+      </div>
+      <div class="mode-buttons">
+        <button class="mode-btn" data-mode="open">오픈</button>
+        <button class="mode-btn" data-mode="edit">수정</button>
+        <button class="mode-btn" data-mode="close">마감</button>
+        <button class="reset-btn" id="btnInvReset">전체 삭제</button>
+      </div>
+    </header>
+
+    <div class="table-card">
+      <div class="table-head">
+        <span class="col-drag"></span>
+        <span class="col-name">품목</span>
+        <span>창고</span>
+        <span>오픈</span>
+        <span>마감</span>
+        <span>판매</span>
+      </div>
+      <div class="table-body" id="invRows"></div>
+      <button class="add-row-btn" id="btnAddRow">+ 행 추가</button>
+    </div>
+  </section>
+</div>
+
+<div class="modal-overlay hidden" id="resetModalOverlay">
+  <div class="modal-card">
+    <h3>초기화 선택</h3>
+    <p>초기화할 항목을 선택하세요</p>
+    <button class="modal-btn" id="resetFirstBtn" data-reset="reserve">빼놓은 돈</button>
+    <button class="modal-btn" data-reset="open">오픈</button>
+    <button class="modal-btn" data-reset="close">마감</button>
+    <button class="modal-btn danger" data-reset="all">전체 초기화</button>
+    <button class="modal-cancel" id="modalCancel">취소</button>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var DENOMS = [50000, 10000, 5000, 1000];
+  var CASH_KEY = "cashRegisterState_v1";
+  var INV_KEY = "inventoryState_v1";
+  var TAB_KEY = "activeTab_v1";
+
+  function clampInt(v){
+    var n = parseInt(String(v).replace(/[^0-9]/g,""), 10);
+    return isNaN(n) || n < 0 ? 0 : n;
+  }
+  function fmt(n){ return Number(n || 0).toLocaleString("ko-KR"); }
+
+  function setActiveTab(tab){
+    document.querySelectorAll(".tab-btn").forEach(function(b){
+      b.classList.toggle("active", b.dataset.tab === tab);
+    });
+    document.getElementById("panel-cash").classList.toggle("hidden", tab !== "cash");
+    document.getElementById("panel-inventory").classList.toggle("hidden", tab !== "inventory");
+    try{ localStorage.setItem(TAB_KEY, tab); }catch(e){}
+  }
+  document.querySelectorAll(".tab-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){ setActiveTab(btn.dataset.tab); });
+  });
+
+  function defaultCashState(){
+    return {
+      reserve:{50000:0,10000:0,5000:0,1000:0},
+      open:{50000:0,10000:0,5000:0,1000:0},
+      close:{50000:0,10000:0,5000:0,1000:0},
+      mode:"none",
+      closeActivated:false
+    };
+  }
+  function loadCashState(){
+    try{
+      var raw = localStorage.getItem(CASH_KEY);
+      if(!raw) return defaultCashState();
+      var parsed = JSON.parse(raw);
+      var base = defaultCashState();
+      DENOMS.forEach(function(d){
+        if(parsed.reserve && parsed.reserve[d] != null) base.reserve[d] = clampInt(parsed.reserve[d]);
+        if(parsed.open && parsed.open[d] != null) base.open[d] = clampInt(parsed.open[d]);
+        if(parsed.close && parsed.close[d] != null) base.close[d] = clampInt(parsed.close[d]);
+      });
+      base.mode = parsed.mode || "none";
+      base.closeActivated = !!parsed.closeActivated;
+      return base;
+    }catch(e){ return defaultCashState(); }
+  }
+  function saveCashState(){ try{ localStorage.setItem(CASH_KEY, JSON.stringify(cashState)); }catch(e){} }
+
+  var cashState = loadCashState();
+
+  function cashTotal(section){
+    return DENOMS.reduce(function(sum, d){
+      return sum + (Number(cashState[section][d]) || 0) * d;
+    }, 0);
+  }
+  function cashModeHintText(){
+    switch(cashState.mode){
+      case "open": return "빼놓은 돈과 오픈 수량을 입력하세요";
+      case "edit": return "버튼으로 빼놓은 돈 ↔ 오픈 수량을 조정하세요 (연동됨)";
+      case "close": return "마감 수량을 입력하세요";
+      default: return "오픈, 수정, 마감 중 모드를 선택하세요";
+    }
+  }
+  function makeCashRow(section, d){
+    var row = document.createElement("div");
+    row.className = "row";
+
+    var label = document.createElement("span");
+    label.className = "denom-label";
+    label.textContent = fmt(d);
+
+    var xMark = document.createElement("span");
+    xMark.className = "denom-x";
+    xMark.textContent = "X";
+
+    var valueArea = document.createElement("div");
+    valueArea.className = "value-area";
+
+    var isEditableDirect =
+      (section === "reserve" && cashState.mode === "open") ||
+      (section === "open" && cashState.mode === "open") ||
+      (section === "close" && cashState.mode === "close");
+    var isStepper =
+      (section === "reserve" && cashState.mode === "edit") ||
+      (section === "open" && cashState.mode === "edit");
+
+    if(isEditableDirect){
+      var input = document.createElement("input");
+      input.type = "text"; input.inputMode = "numeric"; input.pattern = "[0-9]*";
+      input.className = "count-input";
+      input.value = cashState[section][d];
+      input.addEventListener("input", function(e){
+        cashState[section][d] = clampInt(e.target.value);
+        saveCashState(); renderCashTotals();
+      });
+      input.addEventListener("blur", function(){ renderCash(); });
+      valueArea.appendChild(input);
+    } else if(isStepper){
+      var minusBtn = document.createElement("button");
+      minusBtn.type = "button"; minusBtn.className = "stepper-btn"; minusBtn.textContent = "−";
+      var plusBtn = document.createElement("button");
+      plusBtn.type = "button"; plusBtn.className = "stepper-btn"; plusBtn.textContent = "+";
+      var valSpan = document.createElement("span");
+      valSpan.className = "count-display"; valSpan.textContent = fmt(cashState[section][d]);
+
+      if(section === "open"){
+        minusBtn.disabled = cashState.open[d] <= 0;
+        plusBtn.disabled = cashState.reserve[d] <= 0;
+        minusBtn.addEventListener("click", function(){
+          if(cashState.open[d] > 0){ cashState.open[d]--; cashState.reserve[d]++; saveCashState(); renderCash(); }
+        });
+        plusBtn.addEventListener("click", function(){
+          if(cashState.reserve[d] > 0){ cashState.open[d]++; cashState.reserve[d]--; saveCashState(); renderCash(); }
+        });
+      } else {
+        minusBtn.disabled = cashState.reserve[d] <= 0;
+        plusBtn.disabled = cashState.open[d] <= 0;
+        minusBtn.addEventListener("click", function(){
+          if(cashState.reserve[d] > 0){ cashState.reserve[d]--; cashState.open[d]++; saveCashState(); renderCash(); }
+        });
+        plusBtn.addEventListener("click", function(){
+          if(cashState.open[d] > 0){ cashState.reserve[d]++; cashState.open[d]--; saveCashState(); renderCash(); }
+        });
+      }
+      valueArea.appendChild(minusBtn);
+      valueArea.appendChild(valSpan);
+      valueArea.appendChild(plusBtn);
+    } else {
+      var plain = document.createElement("span");
+      plain.className = "count-display";
+      plain.textContent = fmt(cashState[section][d]);
+      valueArea.appendChild(plain);
+    }
+
+    row.appendChild(label); row.appendChild(xMark); row.appendChild(valueArea);
+    return row;
+  }
+  function renderCashRows(section){
+    var container = document.getElementById("rows-" + section);
+    container.innerHTML = "";
+    DENOMS.forEach(function(d){ container.appendChild(makeCashRow(section, d)); });
+  }
+  function renderCashTotals(){
+    document.getElementById("total-reserve").textContent = fmt(cashTotal("reserve"));
+    document.getElementById("total-open").textContent = fmt(cashTotal("open"));
+    document.getElementById("total-close").textContent = fmt(cashTotal("close"));
+
+    var openTotal = cashTotal("open");
+    var closeTotal = cashTotal("close");
+    var result = openTotal - closeTotal;
+
+    document.getElementById("sumOpen").textContent = fmt(openTotal);
+    document.getElementById("sumClose").textContent = fmt(closeTotal);
+    document.getElementById("sumResult").textContent = fmt(result);
+
+    var summaryBox = document.getElementById("summaryBox");
+    summaryBox.classList.toggle("inactive", !cashState.closeActivated);
+  }
+  function renderCashModeButtons(){
+    document.querySelectorAll("#panel-cash .mode-btn").forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.mode === cashState.mode);
+    });
+    document.getElementById("cashModeHint").textContent = cashModeHintText();
+  }
+  function renderCash(){
+    renderCashRows("reserve"); renderCashRows("open"); renderCashRows("close");
+    renderCashTotals(); renderCashModeButtons();
+  }
+  document.querySelectorAll("#panel-cash .mode-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var m = btn.dataset.mode;
+      cashState.mode = (cashState.mode === m) ? "none" : m;
+      if(cashState.mode === "close"){ cashState.closeActivated = true; }
+      saveCashState(); renderCash();
+    });
+  });
+
+  function defaultInvState(){
+    return { items:[ {id:1, name:"", warehouse:0, open:0, close:0} ], mode:"none", nextId:2 };
+  }
+  function loadInvState(){
+    try{
+      var raw = localStorage.getItem(INV_KEY);
+      if(!raw) return defaultInvState();
+      var parsed = JSON.parse(raw);
+      if(!parsed.items || !Array.isArray(parsed.items)) return defaultInvState();
+      var items = parsed.items.map(function(it){
+        return {
+          id: it.id,
+          name: typeof it.name === "string" ? it.name : "",
+          warehouse: clampInt(it.warehouse),
+          open: clampInt(it.open),
+          close: clampInt(it.close)
+        };
+      });
+      return {
+        items: items,
+        mode: parsed.mode || "none",
+        nextId: typeof parsed.nextId === "number" ? parsed.nextId : (items.length + 1)
+      };
+    }catch(e){ return defaultInvState(); }
+  }
+  function saveInvState(){ try{ localStorage.setItem(INV_KEY, JSON.stringify(invState)); }catch(e){} }
+
+  var invState = loadInvState();
+  var invOpenRowId = null;
+  var focusNewRowId = null;
+
+  function invModeHintText(){
+    switch(invState.mode){
+      case "open": return "창고와 오픈 수량을 입력하세요";
+      case "edit": return "버튼으로 창고 ↔ 오픈 수량을 조정하세요 (연동됨)";
+      case "close": return "마감 수량을 입력하세요";
+      default: return "오픈, 수정, 마감 중 모드를 선택하세요";
+    }
+  }
+
+  function closeOtherSwipedRows(exceptId){
+    if(invOpenRowId !== null && invOpenRowId !== exceptId){
+      var prevEl = document.querySelector('.row-content[data-id="' + invOpenRowId + '"]');
+      if(prevEl) prevEl.style.transform = "translateX(0px)";
+      invOpenRowId = null;
+    }
+  }
+
+  function attachSwipe(rowContentEl, id, deleteWidth){
+    var startX = 0, startTranslate = 0, dragging = false, movingConfirmed = false;
+
+    rowContentEl.addEventListener("pointerdown", function(e){
+      closeOtherSwipedRows(id);
+      dragging = true; movingConfirmed = false;
+      startX = e.clientX;
+      var m = rowContentEl.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
+      startTranslate = m ? parseFloat(m[1]) : 0;
+    });
+
+    rowContentEl.addEventListener("pointermove", function(e){
+      if(!dragging) return;
+      var delta = e.clientX - startX;
+      if(!movingConfirmed){
+        if(Math.abs(delta) > 8){ movingConfirmed = true; rowContentEl.classList.add("dragging"); }
+        else return;
+      }
+      var next = startTranslate + delta;
+      if(next > 0) next = 0;
+      if(next < -deleteWidth) next = -deleteWidth;
+      rowContentEl.style.transform = "translateX(" + next + "px)";
+    });
+
+    function endDrag(){
+      if(!dragging) return;
+      dragging = false;
+      rowContentEl.classList.remove("dragging");
+      if(!movingConfirmed) return;
+      var m = rowContentEl.style.transform.match(/translateX\((-?\d+(\.\d+)?)px\)/);
+      var current = m ? parseFloat(m[1]) : 0;
+      var shouldOpen = current < -deleteWidth / 2;
+      rowContentEl.style.transform = "translateX(" + (shouldOpen ? -deleteWidth : 0) + "px)";
+      invOpenRowId = shouldOpen ? id : null;
+    }
+    rowContentEl.addEventListener("pointerup", endDrag);
+    rowContentEl.addEventListener("pointercancel", endDrag);
+  }
+
+  function clearReorderMarkers(){
+    document.querySelectorAll("#invRows .row-wrap").forEach(function(row){
+      row.classList.remove("reorder-over-before", "reorder-over-after");
+    });
+  }
+
+  function moveInvItem(id, targetId, position){
+    if(id === targetId) return;
+    var fromIndex = invState.items.findIndex(function(it){ return it.id === id; });
+    var toIndex = invState.items.findIndex(function(it){ return it.id === targetId; });
+    if(fromIndex < 0 || toIndex < 0) return;
+    var moved = invState.items.splice(fromIndex, 1)[0];
+    if(fromIndex < toIndex) toIndex--;
+    if(position === "after") toIndex++;
+    invState.items.splice(toIndex, 0, moved);
+    saveInvState();
+  }
+
+  function attachRowReorder(rowWrapEl, handleEl, id){
+    var tracking = false;
+    var dragging = false;
+    var startY = 0;
+    var targetId = null;
+    var targetPosition = "before";
+
+    handleEl.addEventListener("pointerdown", function(e){
+      if(e.button && e.button !== 0) return;
+      closeOtherSwipedRows(id);
+      invOpenRowId = null;
+      tracking = true;
+      dragging = false;
+      startY = e.clientY;
+      targetId = null;
+      targetPosition = "before";
+      handleEl.setPointerCapture(e.pointerId);
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    handleEl.addEventListener("pointermove", function(e){
+      if(!tracking) return;
+      if(!dragging){
+        if(Math.abs(e.clientY - startY) < 6) return;
+        dragging = true;
+        rowWrapEl.classList.add("reorder-dragging");
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      var el = document.elementFromPoint(e.clientX, e.clientY);
+      var targetRow = el ? el.closest("#invRows .row-wrap[data-id]") : null;
+      clearReorderMarkers();
+      targetId = null;
+      if(targetRow && targetRow !== rowWrapEl){
+        var rect = targetRow.getBoundingClientRect();
+        targetPosition = e.clientY < rect.top + rect.height / 2 ? "before" : "after";
+        targetRow.classList.add(targetPosition === "before" ? "reorder-over-before" : "reorder-over-after");
+        targetId = Number(targetRow.getAttribute("data-id"));
+      }
+    });
+
+    function finishDrag(e){
+      if(!tracking) return;
+      if(e){ e.preventDefault(); e.stopPropagation(); }
+      tracking = false;
+      rowWrapEl.classList.remove("reorder-dragging");
+      clearReorderMarkers();
+      if(dragging && targetId !== null){
+        moveInvItem(id, targetId, targetPosition);
+        renderInventory();
+      }
+      dragging = false;
+    }
+    handleEl.addEventListener("pointerup", finishDrag);
+    handleEl.addEventListener("pointercancel", finishDrag);
+  }
+
+  function makeInvCell(kind, item){
+    var cell = document.createElement("div");
+    cell.className = "cell" + (kind === "name" ? " cell-name" : "");
+
+    if(kind === "name"){
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "name-input";
+      nameInput.placeholder = "품목 이름";
+      nameInput.value = item.name;
+      nameInput.addEventListener("input", function(e){
+        item.name = e.target.value;
+        saveInvState();
+      });
+      cell.appendChild(nameInput);
+      return cell;
+    }
+
+    if(kind === "sale"){
+      var saleSpan = document.createElement("span");
+      saleSpan.className = "sale-value";
+      saleSpan.textContent = fmt(item.open - item.close);
+      cell.appendChild(saleSpan);
+      return cell;
+    }
+
+    var isEditableDirect =
+      (kind === "warehouse" && invState.mode === "open") ||
+      (kind === "open" && invState.mode === "open") ||
+      (kind === "close" && invState.mode === "close");
+    var isStepper =
+      (kind === "warehouse" && invState.mode === "edit") ||
+      (kind === "open" && invState.mode === "edit");
+
+    if(isEditableDirect){
+      var input = document.createElement("input");
+      input.type = "text"; input.inputMode = "numeric"; input.pattern = "[0-9]*";
+      input.className = "count-input tbl";
+      input.value = item[kind];
+      input.addEventListener("input", function(e){
+        item[kind] = clampInt(e.target.value);
+        saveInvState();
+        renderInventory();
+      });
+      cell.appendChild(input);
+    } else if(isStepper){
+      var wrap = document.createElement("div");
+      wrap.className = "stepper-row";
+      var minusBtn = document.createElement("button");
+      minusBtn.type = "button"; minusBtn.className = "stepper-btn"; minusBtn.textContent = "−";
+      var plusBtn = document.createElement("button");
+      plusBtn.type = "button"; plusBtn.className = "stepper-btn"; plusBtn.textContent = "+";
+      var valSpan = document.createElement("span");
+      valSpan.className = "count-display center"; valSpan.textContent = fmt(item[kind]);
+
+      if(kind === "open"){
+        minusBtn.disabled = item.open <= 0;
+        plusBtn.disabled = item.warehouse <= 0;
+        minusBtn.addEventListener("click", function(){
+          if(item.open > 0){ item.open--; item.warehouse++; saveInvState(); renderInventory(); }
+        });
+        plusBtn.addEventListener("click", function(){
+          if(item.warehouse > 0){ item.open++; item.warehouse--; saveInvState(); renderInventory(); }
+        });
+      } else {
+        minusBtn.disabled = item.warehouse <= 0;
+        plusBtn.disabled = item.open <= 0;
+        minusBtn.addEventListener("click", function(){
+          if(item.warehouse > 0){ item.warehouse--; item.open++; saveInvState(); renderInventory(); }
+        });
+        plusBtn.addEventListener("click", function(){
+          if(item.open > 0){ item.warehouse++; item.open--; saveInvState(); renderInventory(); }
+        });
+      }
+      wrap.appendChild(minusBtn); wrap.appendChild(valSpan); wrap.appendChild(plusBtn);
+      cell.appendChild(wrap);
+    } else {
+      var plain = document.createElement("span");
+      plain.className = "count-display center";
+      plain.textContent = fmt(item[kind]);
+      cell.appendChild(plain);
+    }
+    return cell;
+  }
+
+  function renderInventory(){
+    var container = document.getElementById("invRows");
+    container.innerHTML = "";
+
+    if(invState.items.length === 0){
+      var empty = document.createElement("div");
+      empty.className = "table-empty";
+      empty.textContent = "등록된 품목이 없습니다. 아래 + 행 추가 버튼을 눌러보세요.";
+      container.appendChild(empty);
+    } else {
+      invState.items.forEach(function(item){
+        var wrap = document.createElement("div");
+        wrap.className = "row-wrap";
+        wrap.setAttribute("data-id", item.id);
+
+        var deleteBg = document.createElement("div");
+        deleteBg.className = "row-delete-bg";
+        var deleteBtn = document.createElement("button");
+        deleteBtn.type = "button";
+        deleteBtn.className = "row-delete-btn";
+        deleteBtn.textContent = "삭제";
+        deleteBtn.addEventListener("click", function(){
+          invState.items = invState.items.filter(function(it){ return it.id !== item.id; });
+          if(invOpenRowId === item.id) invOpenRowId = null;
+          saveInvState();
+          renderInventory();
+        });
+        deleteBg.appendChild(deleteBtn);
+
+        var content = document.createElement("div");
+        content.className = "row-content";
+        content.setAttribute("data-id", item.id);
+        if(invOpenRowId === item.id){ content.style.transform = "translateX(-84px)"; }
+
+        var dragCell = document.createElement("div");
+        dragCell.className = "cell drag-cell";
+        var dragHandle = document.createElement("button");
+        dragHandle.type = "button";
+        dragHandle.className = "drag-handle";
+        dragHandle.setAttribute("aria-label", "행 이동");
+        dragHandle.textContent = "☰";
+        dragCell.appendChild(dragHandle);
+        content.appendChild(dragCell);
+
+        content.appendChild(makeInvCell("name", item));
+        content.appendChild(makeInvCell("warehouse", item));
+        content.appendChild(makeInvCell("open", item));
+        content.appendChild(makeInvCell("close", item));
+        content.appendChild(makeInvCell("sale", item));
+
+        attachSwipe(content, item.id, 84);
+        attachRowReorder(wrap, dragHandle, item.id);
+
+        wrap.appendChild(deleteBg);
+        wrap.appendChild(content);
+        container.appendChild(wrap);
+      });
+    }
+
+    document.querySelectorAll("#panel-inventory .mode-btn").forEach(function(btn){
+      btn.classList.toggle("active", btn.dataset.mode === invState.mode);
+    });
+    document.getElementById("invModeHint").textContent = invModeHintText();
+
+    if(focusNewRowId !== null){
+      var el = document.querySelector('.row-content[data-id="' + focusNewRowId + '"] .name-input');
+      if(el) el.focus();
+      focusNewRowId = null;
+    }
+  }
+
+  document.querySelectorAll("#panel-inventory .mode-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var m = btn.dataset.mode;
+      invState.mode = (invState.mode === m) ? "none" : m;
+      saveInvState(); renderInventory();
+    });
+  });
+
+  document.getElementById("btnAddRow").addEventListener("click", function(){
+    var newItem = { id: invState.nextId++, name:"", warehouse:0, open:0, close:0 };
+    invState.items.push(newItem);
+    focusNewRowId = newItem.id;
+    saveInvState();
+    renderInventory();
+  });
+
+  var resetOverlay = document.getElementById("resetModalOverlay");
+  var resetFirstBtn = document.getElementById("resetFirstBtn");
+  var resetTitle = resetOverlay.querySelector(".modal-card h3");
+  var resetText = resetOverlay.querySelector(".modal-card p");
+  var resetOpenBtn = resetOverlay.querySelector('.modal-btn[data-reset="open"]');
+  var resetCloseBtn = resetOverlay.querySelector('.modal-btn[data-reset="close"]');
+  var resetAllBtn = resetOverlay.querySelector('.modal-btn[data-reset="all"]');
+  var resetContext = "cash";
+
+  function openResetModal(ctx){
+    resetContext = ctx;
+    if(ctx === "cash"){
+      resetTitle.textContent = "초기화 선택";
+      resetText.textContent = "초기화할 항목을 선택하세요";
+      resetFirstBtn.style.display = "block";
+      resetOpenBtn.style.display = "block";
+      resetCloseBtn.style.display = "block";
+      resetFirstBtn.textContent = "빼놓은 돈";
+      resetFirstBtn.dataset.reset = "reserve";
+      resetAllBtn.textContent = "전체 초기화";
+    } else {
+      resetTitle.textContent = "전체 삭제하시겠습니까?";
+      resetText.textContent = "재고 관리의 모든 행이 삭제됩니다.";
+      resetFirstBtn.style.display = "none";
+      resetOpenBtn.style.display = "none";
+      resetCloseBtn.style.display = "none";
+      resetAllBtn.textContent = "삭제";
+    }
+    resetOverlay.classList.remove("hidden");
+  }
+  document.getElementById("btnCashReset").addEventListener("click", function(){ openResetModal("cash"); });
+  document.getElementById("btnInvReset").addEventListener("click", function(){ openResetModal("inventory"); });
+  document.getElementById("modalCancel").addEventListener("click", function(){ resetOverlay.classList.add("hidden"); });
+  resetOverlay.addEventListener("click", function(e){ if(e.target === resetOverlay) resetOverlay.classList.add("hidden"); });
+
+  document.querySelectorAll(".modal-btn").forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = btn.dataset.reset;
+
+      if(resetContext === "cash"){
+        if(target === "reserve"){ DENOMS.forEach(function(d){ cashState.reserve[d] = 0; }); }
+        else if(target === "open"){ DENOMS.forEach(function(d){ cashState.open[d] = 0; }); }
+        else if(target === "close"){ DENOMS.forEach(function(d){ cashState.close[d] = 0; }); }
+        else if(target === "all"){
+          DENOMS.forEach(function(d){ cashState.reserve[d]=0; cashState.open[d]=0; cashState.close[d]=0; });
+          cashState.mode = "none";
+          cashState.closeActivated = false;
+        }
+        saveCashState(); renderCash();
+      } else {
+        if(target === "warehouse"){ invState.items.forEach(function(it){ it.warehouse = 0; }); }
+        else if(target === "open"){ invState.items.forEach(function(it){ it.open = 0; }); }
+        else if(target === "close"){ invState.items.forEach(function(it){ it.close = 0; }); }
+        else if(target === "all"){
+          invState.items = [];
+          invState.mode = "none";
+          invOpenRowId = null;
+        }
+        saveInvState(); renderInventory();
+      }
+      resetOverlay.classList.add("hidden");
+    });
+  });
+
+  renderCash();
+  renderInventory();
+  try{
+    var savedTab = localStorage.getItem(TAB_KEY);
+    if(savedTab === "inventory") setActiveTab("inventory");
+  }catch(e){}
+})();
+</script>
+</body>
+</html>
+```
